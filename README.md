@@ -1,7 +1,7 @@
 # CentOSCluster
 Hadoop,Zookeeper,Flink等集群配置
 
-## 虚拟机
+## 虚拟机配置!!
 OS:Centos7三台  
 master一台,slave两台.  
 >1.后面会配置HA,这只是个hostname.  
