@@ -16,6 +16,15 @@
 
 <!-- Site specific YARN configuration properties -->
 
+	<!--0.A comma separated list of services...-->
+	<property>
+		<name>yarn.nodemanager.aux-services</name>
+		<value>mapreduce_shuffle</value>
+	</property>
+	<property>
+        <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
+        <value>org.apache.hadoop.mapred.ShuffleHandler</value>
+	</property>
 	<!--1.The address of the applications manager interface in the RM.-->
 	<property>
 		<name>yarn.resourcemanager.address</name>
@@ -26,12 +35,17 @@
 		<name>yarn.resourcemanager.scheduler.address</name>
 		<value>master:8030</value>
 	</property>
-	<!--3.The address of the RM admin interface.-->
+	<!--3.resource-tracker-->
+	<property>	
+		<name>yarn.resourcemanager.resource-tracker.address</name>	
+		<value>master:8031</value>	
+	</property>	
+	<!--4.The address of the RM admin interface.-->
 	<property>
 		<name>yarn.resourcemanager.admin.address</name>
 		<value>master:8033</value>
 	</property>
-	<!--4.The http address of the RM web application.-->
+	<!--5.The http address of the RM web application.-->
 	<property>
 		<name>yarn.resourcemanager.webapp.address</name>
 		<value>master:8088</value>
