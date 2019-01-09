@@ -19,9 +19,14 @@ hdfs namenode -format
 start-dfs.sh
 start-yarn.sh
 ```
+注:访问jobhistory的19888端口提示404,是因为jobhistory的进程需要单独启动:
+``` bash
+mr-jobhistory-daemon.sh start historyserver
+```
+
 ### 查看状态
 jps查看启动进程
->master上:NameNode,SecondaryNameNode,ResourceManager  
+>master上:NameNode,SecondaryNameNode,ResourceManager,JobHistoryServer  
 slaves上:DataNode,NodeManager
 
 或者直接在浏览器访问hdfs和yarn管理台:
