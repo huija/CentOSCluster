@@ -49,6 +49,11 @@
 	<property>
 		<name>yarn.resourcemanager.webapp.address</name>
 		<value>master:8088</value>
-	</property>							
+	</property>	
+	<!--6.Whether to enable log aggregation-->
+	<property>
+		<name>yarn.log-aggregation-enable</name>
+		<value>true</value>
+	</property>	
 
 </configuration>

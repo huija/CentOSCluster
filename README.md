@@ -62,6 +62,7 @@ study	4
 
 ### 关闭集群:
 ``` bash
+mr-jobhistory-daemon.sh stop historyserver
 stop-yarn.sh
 stop-dfs.sh
 ```
