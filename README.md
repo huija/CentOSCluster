@@ -67,3 +67,6 @@ stop-yarn.sh
 stop-dfs.sh
 ```
 注:如果格式化,需要删除子节点的dfs目录,否则再启动,datanode会down掉!
+
+## zookeeper3.4.13集群配置
+
