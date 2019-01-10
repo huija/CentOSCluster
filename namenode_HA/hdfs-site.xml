@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License. See accompanying LICENSE file.
+-->
+
+<!-- Put site-specific property overrides in this file. -->
+
+<configuration>
+
+	<!--NNHA-->
+	<!--1.Comma-separated list of nameservices.-->
+	<property>
+		<name>dfs.nameservices</name>
+		<value>NNHA</value>
+	</property>
+	<!--2.The prefix for a given nameservice..-->
+	<property>
+		<name>dfs.ha.namenodes.NNHA</name>
+		<value>NN1,NN2</value>
+	</property>
+	<!--3.NNs' RPC address that handles all clients requests -->
+	<property>
+		<name>dfs.namenode.rpc-address.NNHA.NN1</name>
+		<value>master:9000</value>
+	</property>
+	<property>
+		<name>dfs.namenode.rpc-address.NNHA.NN2</name>
+		<value>slave1:9000</value>
+	</property>
+	<!--4.NNs' HTTP address the HTTP servers will bind to-->
+	<property>
+		<name>dfs.namenode.http-address.NNHA.NN1</name>
+		<value>master:50070</value>
+	</property>
+	<property>
+		<name>dfs.namenode.http-address.NNHA.NN2</name>
+		<value>slave1:50070</value>
+	</property>
+	<!--5.JournalNode about shared storage between the multiple namenodes in an HA cluster-->
+	<property>
+		<name>dfs.namenode.shared.edits.dir</name>
+		<value>qjournal://master:8485;slave1:8485;slave2:8485/NNHA</value>
+	</property>
+	<property>
+		<name>dfs.journalnode.edits.dir</name>
+		<value>/home/hadoop/hadoop-2.7.7/journal</value>
+	</property>
+	<!--6.automatic failover-->
+	<property>
+		<name>dfs.ha.automatic-failover.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>dfs.client.failover.proxy.provider.NNHA</name>
+		<value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+	</property>
+	<!--7.ssh to slove the problem about two Active NN-->
+	<property>
+		<name>dfs.ha.fencing.methods</name>
+		<value>sshfence</value>
+	</property>
+	<property>
+		<name>dfs.ha.fencing.ssh.private-key-files</name>
+		<value>/home/hadoop/.ssh/id_rsa</value>
+	</property>
+	<!--BASE-->
+	<!--1.where the DFS name node should store the name table(fsimage)-->
+	<property>
+		<name>dfs.namenode.name.dir</name>
+		<value>file:/home/hadoop/dfs/name</value>
+	</property>
+	<!--2.where an DFS data node should store its blocks.-->
+	<property>
+		<name>dfs.datanode.data.dir</name>
+		<value>file:/home/hadoop/dfs/data</value>
+	</property>
+	<!--3.Default block replication.-->
+	<property>
+		<name>dfs.replication</name>
+		<value>2</value>
+	</property>
+	<!--4.Enable WebHDFS (REST API) in Namenodes and Datanodes.-->
+	<property>
+		<name>dfs.webhdfs.enabled</name>
+		<value>true</value>
+	</property>
+	<!--5.enable permission checking in HDFS-->
+	<property>
+		<name>dfs.permissions</name>
+		<value>false</value>
+	</property>
+	<!--6.The default block size for new files, in bytes.or...-->
+	<property>
+		<name>dfs.blocksize</name>
+		<value>128m</value>
+	</property>
+
+</configuration>
