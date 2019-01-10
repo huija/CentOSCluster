@@ -11,7 +11,8 @@ master一台,slave两台.
 3.切换hadoop用户在/home/hadoop下设置ssh免密,关闭防火墙,并关闭Selinux!  
 
 ## hadoop2.7.7基本配置
-按照[hadoop基本配置](https://github.com/huija/CentOSCluster/tree/master/hadoop2.7.7_base_settings),修改相关hostname及路径,放到你的配置文件夹中.
+按照[hadoop基本配置](https://github.com/huija/CentOSCluster/tree/master/hadoop2.7.7_base_settings),修改相关hostname及路径,放到你的配置文件夹中.  
+>每一个分布式软件的安装,都需要配置环境变量,一般将bin放到PATH中就可以了(某些需要配sbin和lib等等).
 
 ### 启动你的hadoop集群:  
 ``` bash
@@ -68,5 +69,30 @@ stop-dfs.sh
 ```
 注:如果格式化,需要删除子节点的dfs目录,否则再启动,datanode会down掉!
 
-## zookeeper3.4.13集群配置
-
+## zookeeper3.4.13基本配置
+zookeeper的集群个数选单数.  
+在各个机器上安装好zookeeper,[配置好zoo.cfg](https://github.com/huija/CentOSCluster/tree/master/zookeeper3.4.13_base_settings),然后对应设置好每个机器的myid,zookeeper集群就搭建好了.
+``` bash
+mkdir -p /home/hadoop/zookeeper-3.4.13/mydir/data
+cd /home/hadoop/zookeeper-3.4.13/mydir/data
+cat > myid << EOF
+1
+EOF
+```
+### zookeeper集群启动
+zookeeper的启动需要到各个机器上单独进行启动,具体启动命令如下:
+``` bash
+zkServer.sh start
+```
+启动后使用jps查看进程,如果看到QuorumPeerMain进程,说明这个机器上的zookeeper就启动了.  
+同理,依次启动所有机器上的zookeeper.  
+接着每个机器可以使用命令查看自己的状态:
+``` bash
+zkServer.sh status
+```
+主要分为leader和follower.
+### zookeeper集群关闭
+``` bash
+zkServer.sh stop
+```
+注:有时候使用zookeeper启动不起来,发现2181端口被进程占用,但是进程没有pid,原因是不同的用户启动了zookeeper(虽然一个人不会遇见这种问题).
