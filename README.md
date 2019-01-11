@@ -95,4 +95,79 @@ zkServer.sh status
 ``` bash
 zkServer.sh stop
 ```
-注:有时候使用zookeeper启动不起来,发现2181端口被进程占用,但是进程没有pid,原因是不同的用户启动了zookeeper(虽然一个人不会遇见这种问题).
+注:有时候使用zookeeper启动不起来,发现2181端口被进程占用,但是进程没有pid,原因是不同的用户启动了zookeeper(使用root用户可以看到所有).
+
+## NameNode HA配置
+初始化hadoop集群,关闭所有集群.    
+在前面hadoop集群配置的基础上,对每台机器的core-site.xml以及hdfs-site.xml[添加相关配置](https://github.com/huija/CentOSCluster/tree/master/namenode_HA).  
+### 启动配置好NameNode HA的hdfs
+第一次启动略微繁琐.   
+1.启动zookeeper集群
+``` bash
+zkServer.sh start
+```
+2.在每台NameNode上创建命名空间
+``` bash
+hdfs zkfc -formatZK
+```
+3.启动journalnode(节点数取单数,每台都运行下面命令)
+``` bash
+hadoop-daemon.sh start journalnode
+```
+4.主节点上对NameNode和journalnode集群格式化
+``` bash
+hdfs namenode -format NNHA
+```
+5.主节点上启动NameNode (Active)
+``` bash
+hadoop-daemon.sh start namenode
+```
+6.启动从节点上的Namenode (Standby)
+``` bash
+hdfs namenode -bootstrapStandby
+hadoop-daemon.sh start namenode
+```
+7.主从节点上都启动ZKFC
+``` bash
+hadoop-daemon.sh start zkfc
+```
+8.在所有节点上启动DataNode
+``` bash
+hadoop-daemon.sh start datanode
+```
+到这里NameNode的HA就配置完成了.  
+后续的hdfs启动停止与之前基本配置时的命令一致即可
+### 查看各节点进程
+1.master节点,也就是Active NameNode:
+``` bash
+[hadoop@master ~]$ jps
+20289 QuorumPeerMain
+31382 Jps
+31289 DFSZKFailoverController
+31084 JournalNode
+30845 NameNode
+```
+对比基本配置,多了DFSZKFailoverController和JournalNode进程,一个是为了自动切换主备,一个是NameNode元数据备份共享.  
+2.slave1节点,也就是Satndby NameNode:
+``` bash
+[hadoop@slave1 ~]$ jps
+17328 QuorumPeerMain
+22240 JournalNode
+22368 DFSZKFailoverController
+22147 NameNode
+22534 Jps
+```
+对比基本配置DataNode变成了NameNode,同时多了DFSZKFailoverController和JournalNode进程  
+3.slave2节点,也就是DataNode节点:
+``` bash
+[hadoop@slave2 ~]$ jps
+21650 DataNode
+17209 QuorumPeerMain
+21742 JournalNode
+21918 Jps
+```
+多了一个JournalNode进程.
+### Web界面进行HA的可用性检验.
+通过kill掉Active的NameNode进程,查看StandBy的NameNode是否会转变为Active!  
+NameNode网页界面:master:50070和slave1:50070.
+## ResourceManager HA配置
