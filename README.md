@@ -10,6 +10,7 @@ master一台,slave两台.
 为了各软件管理方便,一律放在/home/hadoop目录下,以hadoop用户进行操作.  
 3.切换hadoop用户在/home/hadoop下设置ssh免密,关闭防火墙,并关闭Selinux!  
 
+<span id="hadoop2.7.7基本配置"></span>
 ## hadoop2.7.7基本配置
 按照[hadoop基本配置](https://github.com/huija/CentOSCluster/tree/master/hadoop2.7.7_base_settings),修改相关hostname及路径,放到你的配置文件夹中.  
 >每一个分布式软件的安装,都需要配置环境变量,一般将bin放到PATH中就可以了(某些需要配sbin和lib等等).
@@ -136,7 +137,7 @@ hadoop-daemon.sh start zkfc
 hadoop-daemon.sh start datanode
 ```
 到这里NameNode的HA就配置完成了.  
-后续的hdfs启动停止与之前基本配置时的命令一致即可
+后续的hdfs启动停止与之前[基本配置](#hadoop2.7.7基本配置)时的命令一致即可
 ### 查看各节点进程
 1.master节点,也就是Active NameNode:
 ``` bash
