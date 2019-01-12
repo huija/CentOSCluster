@@ -1,10 +1,12 @@
 # CentOSCluster
 Hadoop,Zookeeper,Flink等集群配置
 # 目录
-## [](#)
-## [1.虚拟机配置!!](#虚拟机配置!!)
-## [2.hadoop2.7.7基本配置](#hadoop2.7.7基本配置)
-### [2.1启动你的hadoop集群](#启动你的hadoop集群)
+### [1.虚拟机配置!!](#虚拟机配置!!)
+### [2.hadoop2.7.7基本配置](#hadoop2.7.7基本配置)
+[2.1启动你的hadoop集群](#启动你的hadoop集群)  
+[](#)
+### [3.zookeeper3.4.13基本配置](#zookeeper3.4.13基本配置)
+### [4.NameNode HA配置](#NameNode HA配置)
 
 <span id="虚拟机配置!!"></span>
 ## 虚拟机配置!!
@@ -33,6 +35,7 @@ start-yarn.sh
 mr-jobhistory-daemon.sh start historyserver
 ```
 
+<span id="查看状态"></span>
 ### 查看状态
 jps查看启动进程
 >master上:NameNode,SecondaryNameNode,ResourceManager,JobHistoryServer  
