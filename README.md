@@ -3,10 +3,9 @@ Hadoop,Zookeeper,Flink等集群配置
 # 目录
 ### [1.虚拟机配置!!](#虚拟机配置!!)
 ### [2.hadoop2.7.7基本配置](#hadoop2.7.7基本配置)
-[2.1启动你的hadoop集群](#启动你的hadoop集群)  
-[](#)
 ### [3.zookeeper3.4.13基本配置](#zookeeper3.4.13基本配置)
-### [4.NameNode HA配置](#NameNode HA配置)
+### [4.NameNode的HA配置](#NameNode的HA配置)
+### [5.ResourceManager的HA配置](#ResourceManager的HA配置)
 
 <span id="虚拟机配置!!"></span>
 ## 虚拟机配置!!
@@ -23,7 +22,6 @@ master一台,slave两台.
 按照[hadoop基本配置](https://github.com/huija/CentOSCluster/tree/master/hadoop2.7.7_base_settings),修改相关hostname及路径,放到你的配置文件夹中.  
 >每一个分布式软件的安装,都需要配置环境变量,一般将bin放到PATH中就可以了(某些需要配sbin和lib等等).
 
-<span id="启动你的hadoop集群"></span>
 ### 启动你的hadoop集群:  
 ``` bash
 hdfs namenode -format
@@ -35,7 +33,6 @@ start-yarn.sh
 mr-jobhistory-daemon.sh start historyserver
 ```
 
-<span id="查看状态"></span>
 ### 查看状态
 jps查看启动进程
 >master上:NameNode,SecondaryNameNode,ResourceManager,JobHistoryServer  
@@ -80,6 +77,7 @@ stop-dfs.sh
 ```
 注:如果格式化,需要删除子节点的dfs目录,否则再启动,datanode会down掉!
 
+<span id="zookeeper3.4.13基本配置"></span>
 ## zookeeper3.4.13基本配置
 zookeeper的集群个数选单数.  
 在各个机器上安装好zookeeper,[配置好zoo.cfg](https://github.com/huija/CentOSCluster/tree/master/zookeeper3.4.13_base_settings),然后对应设置好每个机器的myid,zookeeper集群就搭建好了.
@@ -108,7 +106,8 @@ zkServer.sh stop
 ```
 注:有时候使用zookeeper启动不起来,发现2181端口被进程占用,但是进程没有pid,原因是不同的用户启动了zookeeper(使用root用户可以看到所有).
 
-## NameNode HA配置
+<span id="NameNode的HA配置"></span>
+## NameNode的HA配置
 初始化hadoop集群,关闭所有集群.    
 在前面hadoop集群配置的基础上,对每台机器的core-site.xml以及hdfs-site.xml[添加相关配置](https://github.com/huija/CentOSCluster/tree/master/namenode_HA).  
 ### 启动配置好NameNode HA的hdfs
@@ -181,4 +180,6 @@ hadoop-daemon.sh start datanode
 ### Web界面进行HA的可用性检验.
 通过kill掉Active的NameNode进程,查看StandBy的NameNode是否会转变为Active!  
 NameNode网页界面:master:50070和slave1:50070.
-## ResourceManager HA配置
+
+<span id="ResourceManager的HA配置"></span>
+## ResourceManager的HA配置
