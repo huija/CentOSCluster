@@ -1,6 +1,12 @@
 # CentOSCluster
 Hadoop,Zookeeper,Flink等集群配置
+# 目录
+## [](#)
+## [1.虚拟机配置!!](#虚拟机配置!!)
+## [2.hadoop2.7.7基本配置](#hadoop2.7.7基本配置)
+### [2.1启动你的hadoop集群](#启动你的hadoop集群)
 
+<span id="虚拟机配置!!"></span>
 ## 虚拟机配置!!
 OS:Centos7三台  
 master一台,slave两台.  
@@ -15,6 +21,7 @@ master一台,slave两台.
 按照[hadoop基本配置](https://github.com/huija/CentOSCluster/tree/master/hadoop2.7.7_base_settings),修改相关hostname及路径,放到你的配置文件夹中.  
 >每一个分布式软件的安装,都需要配置环境变量,一般将bin放到PATH中就可以了(某些需要配sbin和lib等等).
 
+<span id="启动你的hadoop集群"></span>
 ### 启动你的hadoop集群:  
 ``` bash
 hdfs namenode -format
