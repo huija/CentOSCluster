@@ -6,6 +6,7 @@ Hadoop,Zookeeper,Flink等集群配置
 ### [3.zookeeper3.4.13基本配置](#zookeeper3.4.13基本配置)
 ### [4.NameNode的HA配置](#NameNode的HA配置)
 ### [5.ResourceManager的HA配置](#ResourceManager的HA配置)
+### [6.Flink On Yarn](#Flink在YARN上的部署)
 
 <span id="虚拟机配置!!"></span>
 ## 虚拟机配置!!
@@ -182,4 +183,50 @@ hadoop-daemon.sh start datanode
 NameNode网页界面:master:50070和slave1:50070.
 
 <span id="ResourceManager的HA配置"></span>
-## ResourceManager的HA配置
+## ResourceManager HA配置
+在前面配置的基础上,配置好[yarn-site.xml](https://github.com/huija/CentOSCluster/tree/master/resourcemanager_HA).
+### 启动配置好的yarn
+这一次启动并没有NameNode的HA第一次启动那么繁琐,虽然都是通过zookeeper来实现HA,但是细节上两个还是有很多区别的.  
+直接集群启动:
+``` bash
+start-yarn.sh
+```
+这时候查看进程,你会发现备用的ResourceManager并没有启动,三台机器的启动进程如下:
+``` bash
+[hadoop@master ~]$ jps
+35683 Jps
+34168 ResourceManager
+35016 JobHistoryServer
+31289 DFSZKFailoverController
+31084 JournalNode
+30845 NameNode
+32638 QuorumPeerMain
+
+[hadoop@slave1 ~]$ jps
+22240 JournalNode
+22368 DFSZKFailoverController
+22147 NameNode
+24583 Jps
+23259 QuorumPeerMain
+
+[hadoop@slave2 ~]$ jps
+21650 DataNode
+24262 Jps
+22553 QuorumPeerMain
+21742 JournalNode
+23103 NodeManager
+```
+其实,我们的配置没有问题,主要的区别在于,备用的RM需要我们在对应机器上手动进行启动:
+``` bash
+yarn-daemon.sh start resourcemanager
+```
+这时候备用的RM就启动了,同样的,关闭集群的时候,建议先关闭备用的这个RM.
+### RM HA高可用验证
+与NN HA中两个NameNode都可以分别通过web访问不同,同一时间,只有一个ResourceManager能通过web访问
+>例如,此时master:8088是yarn的管理界面,那么访问slave1:8088,就会自动跳转到master8088.
+
+检验方法就是kill掉master上的ResourceManager,接着看slave1:8088,能不能接替被杀的RM,管理资源,接管任务.
+>可以尝试在yarn上运行程序的时候,进行这一步,程序并不会受到影响.
+
+<span id="Flink在YARN上的部署"></span>
+## Flink On Yarn
