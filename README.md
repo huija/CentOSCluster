@@ -229,4 +229,8 @@ yarn-daemon.sh start resourcemanager
 >可以尝试在yarn上运行程序的时候,进行这一步,程序并不会受到影响.
 
 <span id="Flink在YARN上的部署"></span>
-## Flink On Yarn
+
+## Flink Standalone
+
+> flink有两种运行模式,分为standalone和on yarn,on yarn我本机资源不够,启动不起来,而且能standalone部署了,那么基本on yarn不存在什么问题.
+
