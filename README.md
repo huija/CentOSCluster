@@ -6,7 +6,7 @@ Hadoop,Zookeeper,Flink等集群配置
 ### [3.zookeeper3.4.13基本配置](#zookeeper3.4.13基本配置)
 ### [4.NameNode的HA配置](#NameNode的HA配置)
 ### [5.ResourceManager的HA配置](#ResourceManager的HA配置)
-### [6.Flink On Yarn](#Flink在YARN上的部署)
+### [6.Flink Standalone](#Flink集群部署)
 
 <span id="虚拟机配置!!"></span>
 ## 虚拟机配置!!
@@ -228,7 +228,7 @@ yarn-daemon.sh start resourcemanager
 检验方法就是kill掉master上的ResourceManager,接着看slave1:8088,能不能接替被杀的RM,管理资源,接管任务.
 >可以尝试在yarn上运行程序的时候,进行这一步,程序并不会受到影响.
 
-<span id="Flink在YARN上的部署"></span>
+<span id="Flink集群部署"></span>
 
 ## Flink Standalone
 
