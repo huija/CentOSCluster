@@ -8,7 +8,10 @@ Hadoop,Zookeeper,Flink等集群配置
 ### [5.ResourceManager的HA配置](#ResourceManager的HA配置)
 ### [6.Flink Standalone](#Flink集群部署)
 
+### [7.我的/etc/profile环境变量添加如下](#环境变量)
+
 <span id="虚拟机配置!!"></span>
+
 ## 虚拟机配置!!
 OS:Centos7三台  
 master一台,slave两台.  
@@ -183,6 +186,7 @@ hadoop-daemon.sh start datanode
 NameNode网页界面:master:50070和slave1:50070.
 
 <span id="ResourceManager的HA配置"></span>
+
 ## ResourceManager HA配置
 在前面配置的基础上,配置好[yarn-site.xml](https://github.com/huija/CentOSCluster/tree/master/resourcemanager_HA).
 ### 启动配置好的yarn
@@ -233,4 +237,107 @@ yarn-daemon.sh start resourcemanager
 ## Flink Standalone
 
 > flink有两种运行模式,分为standalone和on yarn,on yarn我本机资源不够,启动不起来,而且能standalone部署了,那么基本on yarn不存在什么问题.
+
+在master上解压flink安装包, [并进行设置](https://github.com/huija/CentOSCluster/tree/master/flink-1.7.1_standalone). 然后将master上的flink拷贝到需要的slave上!
+
+### 启动flink standalone集群
+
+```bash
+[hadoop@master ~]$ start-cluster.sh
+Starting cluster.
+Starting standalonesession daemon on host master.
+Starting taskexecutor daemon on host slave1.
+Starting taskexecutor daemon on host slave2.
+```
+
+通过上述命令启动集群.
+
+在master和slave上的进程名分别为:
+
+> StandaloneSessionClusterEntrypoint
+>
+> TaskManagerRunner
+
+### 启动flink独特的实时流式wc
+
+1. 首先在master启动nc
+
+```bash
+[hadoop@master ~]$ nc -lk 9999
+
+```
+
+9999端口会进入监听状态.
+
+1. 然后再slave1启动task(不启动nc, 这个run会失败)
+
+```bash
+[hadoop@slave1 ~]$ flink run flink-1.7.1/examples/streaming/SocketWindowWordCount.jar --hostname master --port 9999
+Starting execution of program
+
+```
+
+如上, 任务就算部署到flink集群上了.
+
+1. 接着在http://master:8081找到运行中的任务, 查看其log会输出到那台slave上.
+
+具体是在"Sink: Print to Std. Out"这个子任务内的Host属性值
+
+> 我的是slave1:46186, 也就是说log会在slave1下的flink目录的log目录里, 找到最新的out文件
+
+1. 对流式wc的outlog进行监听输出
+
+```bash
+[hadoop@slave1 ~]$ tail -f flink-1.7.1/log/flink-hadoop-taskexecutor-0-slave1.out
+
+```
+
+初始是空的, 后面流式数据的一个wc会输入进入.
+
+到这里, flink本身的wordcount就运行好了.
+
+1. 进行wordcount体验, 在nc的窗口输入我们的数据
+
+```bash
+[hadoop@master ~]$ nc -lk 9999
+1
+2 2
+3 3 3
+4 4 4 4
+
+```
+
+与之对应的tail窗口的outlog会输出如下
+
+```bash
+[hadoop@slave1 ~]$ tail -f flink-1.7.1/log/flink-hadoop-taskexecutor-0-slave1.out
+1 : 1
+3 : 3
+2 : 2
+4 : 4
+
+```
+
+<span id="环境变量"></span>
+
+## 我的/etc/profile环境变量添加如下
+
+```bash
+# hadoop
+## 0.java
+export JAVA_HOME=/home/hadoop/jdk1.8.0_191
+export PATH=$PATH:$JAVA_HOME/bin
+export CLASSPATH=.:$CLASSPATH:.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+## 1.hadoop
+export HADOOP_HOME=/home/hadoop/hadoop-2.7.7
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HADOOP_HOME/lib/native
+## 2.zookeeper
+export ZOOKEEPER_HOME=/home/hadoop/zookeeper-3.4.13
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+## 3.flink
+export FLINK_HOME=/home/hadoop/flink-1.7.1
+export PATH=$PATH:$FLINK_HOME/bin
+export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
+```
 
