@@ -24,7 +24,7 @@ master一台,slave两台.
 <span id="hadoop2.7.7基本配置"></span>
 ## hadoop2.7.7基本配置
 按照[hadoop基本配置](https://github.com/huija/CentOSCluster/tree/master/hadoop2.7.7_base_settings),修改相关hostname及路径,放到你的配置文件夹中.  
->每一个分布式软件的安装,都需要配置环境变量,一般将bin放到PATH中就可以了(某些需要配sbin和lib等等).
+>每一个分布式软件的安装,都需要[配置环境变量](#环境变量),一般将bin放到PATH中就可以了(某些需要配sbin和lib等等).
 
 ### 启动你的hadoop集群:  
 ``` bash
@@ -317,6 +317,28 @@ Starting execution of program
 4 : 4
 
 ```
+
+## 阶段性总结
+
+到这里就搭建好了初步的hadoop,zookeeper,flink集群, 进程可以通过jps查看.
+
+> flink的HA也是通过zookeeper, 我就不试了.
+
+如今集群全开的情况下, 关闭的步骤如下:
+
+```bash
+1.master上关闭flink集群
+stop-cluster.sh
+2.slave1上关闭备用的ResourceManager
+yarn-daemon.sh start resourcemanager
+3.master上关闭hadoop集群
+stop-yarn.sh
+stop-dfs.sh
+4.master,slave1,slave2上分别关闭zookeeper进程
+zkServer.sh stop
+```
+
+到这, jps应该查不到运行的相关进程了, 后面想要开启集群的时候, 只要反过来开就行了, 具体遇到问题, 可以具体再分析.
 
 <span id="环境变量"></span>
 
