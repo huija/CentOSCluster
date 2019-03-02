@@ -8,13 +8,16 @@ Hadoop,Zookeeper,Flink等集群配置
 ### [5.ResourceManager的HA配置](#ResourceManager的HA配置)
 ### [6.Flink Standalone](#Flink集群部署)
 
-### [7.我的/etc/profile环境变量添加如下](#环境变量)
+### [7.搭建postgresql的hostandby环境](#hotstandby)
+
+### [8.我的/etc/profile环境变量添加如下](#环境变量)
 
 <span id="虚拟机配置!!"></span>
 
 ## 虚拟机配置!!
 OS:Centos7三台  
 master一台,slave两台.  
+
 >1.后面会配置HA,这只是个hostname.  
 每台机器配置下hosts文件.  
 2.创建hadoop用户并配置sudo  
@@ -339,6 +342,14 @@ zkServer.sh stop
 ```
 
 到这, jps应该查不到运行的相关进程了, 后面想要开启集群的时候, 只要反过来开就行了, 具体遇到问题, 可以具体再分析.
+
+<span id="hotstandby"></span>
+
+## 搭建postgresql的hostandby环境
+
+### [postgresql源码安装](https://huija.github.io/2019/03/01/postgresql-source/)
+
+### [hotstandby环境搭建](https://huija.github.io/2019/03/02/postgresql-hotstandby/)
 
 <span id="环境变量"></span>
 
