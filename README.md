@@ -362,7 +362,7 @@ zkServer.sh stop
 >
 > 我把kafka整个删了之后, 再安装, 发现zookeeper内的相关znode还在, 太恐怖了.
 
-首先下载压缩包, 解压在/home/hadoop目录下, [配置环境变量](#环境变量配置), 然后进入$KAFKA_HOME/conf目录, [进行相关配置](https://github.com/huija/CentOSCluster/tree/master/kafka_2.12-2.1.1_base_settings). 主要配置以下三行
+首先下载压缩包, 解压在/home/hadoop目录下, [配置环境变量](#环境变量), 然后进入$KAFKA_HOME/conf目录, [进行相关配置](https://github.com/huija/CentOSCluster/tree/master/kafka_2.12-2.1.1_base_settings). 主要配置以下三行
 
 ```properties
 # The id of the broker. This must be set to a unique integer for each broker.
