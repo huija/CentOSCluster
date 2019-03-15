@@ -10,7 +10,9 @@ Hadoop,Zookeeper,Flink等集群配置
 
 ### [7.搭建postgresql的hostandby环境](#hotstandby)
 
-### [8.我的/etc/profile环境变量添加如下](#环境变量)
+### [8.kafka_2.12-2.1.1集群搭建](#kafka集群)
+
+### [9.我的/etc/profile环境变量添加如下](#环境变量)
 
 <span id="虚拟机配置!!"></span>
 
@@ -333,8 +335,9 @@ Starting execution of program
 1.master上关闭flink集群
 stop-cluster.sh
 2.slave1上关闭备用的ResourceManager
-yarn-daemon.sh start resourcemanager
+yarn-daemon.sh stop resourcemanager
 3.master上关闭hadoop集群
+mr-jobhistory-daemon.sh stop historyserver
 stop-yarn.sh
 stop-dfs.sh
 4.master,slave1,slave2上分别关闭zookeeper进程
@@ -351,11 +354,117 @@ zkServer.sh stop
 
 ### [hotstandby环境搭建](https://huija.github.io/2019/03/02/postgresql-hotstandby/)
 
+<span id="kafka集群"></span>
+
+## kafka_2.12-2.1.1集群搭建
+
+>  kafka集群依赖于zookeeper集群, 其创建的topic等信息都会存在zookeeper, 所有需要先启动zookeeper.
+>
+> 我把kafka整个删了之后, 再安装, 发现zookeeper内的相关znode还在, 太恐怖了.
+
+首先下载压缩包, 解压在/home/hadoop目录下, [配置环境变量](#环境变量配置), 然后进入$KAFKA_HOME/conf目录, [进行相关配置](https://github.com/huija/CentOSCluster/tree/master/kafka_2.12-2.1.1_base_settings). 主要配置以下三行
+
+```properties
+# The id of the broker. This must be set to a unique integer for each broker.
+broker.id=0
+# A comma separated list of directories under which to store log files
+log.dirs=/home/hadoop/kafka_2.12-2.1.1/logs
+# root directory for all kafka znodes.
+zookeeper.connect=master:2181,slave1:2181,slave2:2181
+```
+
+其中broker.id三台机器分别不一样, 其余两个配置一样.
+
+### 启动kafka集群
+
+kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
+
+```bash
+[hadoop@slave2 config]$ kafka-server-start.sh -daemon server.properties
+[hadoop@slave2 config]$ jps
+42568 QuorumPeerMain
+53914 Jps
+53853 Kafka
+```
+
+三台机器上都出现Kafka的进程后, 集群就已经搭建好了, 而且是跟zookeeper一样的高可用模式.
+
+### 运行简单示例
+
+1. 创建Topic, 设定复制因子和分区.
+
+   ```bash
+   [hadoop@master config]$ kafka-topics.sh --create --zookeeper master:2181 --replication-factor 2 --partitions 1 --topic test
+   ....
+   ```
+
+2. 查看Topic是否创建(列出topic列表)
+
+   ```bash
+   [hadoop@master config]$ kafka-topics.sh --zookeeper master:2181 -list
+   __consumer_offsets
+   test
+   ```
+
+3. 在任意一个终端启动一个Producer
+
+   ```bash
+   [hadoop@master config]$ kafka-console-producer.sh --broker-list slave1:9092 --topic test
+   >
+   ```
+
+4. 接着在另外一个终端启动一个Consumer
+
+   ```bash
+   [hadoop@slave1 config]$ kafka-console-consumer.sh --bootstrap-server slave1:9092 --topic test --from-beginning
+   ```
+
+5. 在Producer终端输入消息,与此同时可以看到Consumer的终端有消息打印出来
+
+   ```bash
+   [hadoop@master config]$ kafka-console-producer.sh --broker-list slave1:9092 --topic test
+   >hhh
+   >nizhidaoma
+   >xiezailehaizai
+   >nipabupa
+   >woshipale
+   >
+   ```
+
+   ```bash
+   [hadoop@slave1 config]$ kafka-console-consumer.sh --bootstrap-server slave1:9092 --topic test --from-beginning
+   hhh
+   nizhidaoma
+   xiezailehaizai
+   nipabupa
+   woshipale
+   ```
+
+6. 查看一下topic信息
+
+   ```bash
+   [hadoop@slave2 config]$ kafka-topics.sh -describe --zookeeper master:2181 --topic test
+   Topic:test      PartitionCount:1        ReplicationFactor:2     Configs:
+           Topic: test     Partition: 0    Leader: 0       Replicas: 2,0   Isr: 0,2
+   ```
+
+### 关闭Kafka集群
+
+和zookeeper一样, 在所有机器上运行stop脚本
+
+> 比较奇怪的是每个进程关闭的都很慢, 有时候要5s左右.
+
+```bash
+[hadoop@slave2 config]$ kafka-server-stop.sh
+```
+
 <span id="环境变量"></span>
 
 ## 我的/etc/profile环境变量添加如下
 
 ```bash
+# root
+export PATH=/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
 # hadoop
 ## 0.java
 export JAVA_HOME=/home/hadoop/jdk1.8.0_191
@@ -372,5 +481,17 @@ export PATH=$PATH:$ZOOKEEPER_HOME/bin
 export FLINK_HOME=/home/hadoop/flink-1.7.1
 export PATH=$PATH:$FLINK_HOME/bin
 export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
+## 4.kafaka
+export KAFKA_HOME=/home/hadoop/kafka_2.12-2.1.1
+export PATH=$PATH:$KAFKA_HOME/bin
+# potgres
+## postgresql
+export PG_HOME=/usr/local/pgsql_10.5
+export PATH=$PATH:$PG_HOME/bin
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$PG_HOME/lib
+export MANPATH=$MANPATH:$PG_HOME/share/man
+#export PGDATA=$PG_HOME/data
+export PGDATA=/home/postgres/data
+export PGLOG=$PGDATA/log
 ```
 
