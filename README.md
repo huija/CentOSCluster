@@ -465,11 +465,11 @@ kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
 ```bash
 # root
 export PATH=/usr/lib64/qt-3.3/bin:/usr/local/bin:/usr/bin:/usr/local/sbin:/usr/sbin
-# hadoop
 ## 0.java
-export JAVA_HOME=/home/hadoop/jdk1.8.0_191
+export JAVA_HOME=/usr/local/jdk1.8.0_191
 export PATH=$PATH:$JAVA_HOME/bin
 export CLASSPATH=.:$CLASSPATH:.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+# hadoop
 ## 1.hadoop
 export HADOOP_HOME=/home/hadoop/hadoop-2.7.7
 export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
@@ -484,6 +484,10 @@ export YARN_CONF_DIR=$HADOOP_HOME/etc/hadoop
 ## 4.kafaka
 export KAFKA_HOME=/home/hadoop/kafka_2.12-2.1.1
 export PATH=$PATH:$KAFKA_HOME/bin
+# study
+## 1.redis
+export REDIS_HOME=/home/study/redis-5.0.3
+export PATH=$PATH:$REDIS_HOME/src
 # potgres
 ## postgresql
 export PG_HOME=/usr/local/pgsql_10.5
