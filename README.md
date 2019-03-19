@@ -12,7 +12,9 @@ Hadoop,Zookeeper,Flink等集群配置
 
 ### [8.kafka_2.12-2.1.1集群搭建](#kafka集群)
 
-### [9.我的/etc/profile环境变量添加如下](#环境变量)
+### [9.redis-5.0.3集群搭建](Redis集群)
+
+### [10.我的/etc/profile环境变量添加如下](#环境变量)
 
 <span id="虚拟机配置!!"></span>
 
