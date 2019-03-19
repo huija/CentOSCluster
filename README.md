@@ -458,6 +458,184 @@ kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
 [hadoop@slave2 config]$ kafka-server-stop.sh
 ```
 
+<span id="Redis集群"></span>
+
+## Redis主从复制, 读写分离, 障碍转移
+
+将Redis的压缩包, 解压到三台机器上, 我固定式解压到/home/study/redis-5.0.3
+
+[三台机器都进行具体配置...记住sentinel.conf的sentinel myid不能一样](https://github.com/huija/CentOSCluster/tree/master/redis-5.0.3_base_settings)  
+
+> 因为在Redis的相关都配置好运行后, 会实时地对配置文件进行修改, 所以我自己都不太记得具体需要配什么了......
+
+其中有一个坑: 因为我是拷贝的三台机器的sentinel.conf, 其中有一个配置项为sentinel myid ....
+
+自动生成了一个myid, 而因为我是机器间互相拷贝的, 所以导致id一样, 导致我总是只能发现一个哨兵, 而redis的障碍转移默认需要两个哨兵发现, 所以一直不成功, 坑死我了.
+
+### 复制, 分离检验
+
+```bash
+[study@master redis-5.0.3]$ redis-server redis.conf
+16777:C 19 Mar 2019 21:52:39.605 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+16777:C 19 Mar 2019 21:52:39.605 # Redis version=5.0.3, bits=64, commit=00000000, modified=0, pid=16777, just started
+16777:C 19 Mar 2019 21:52:39.605 # Configuration loaded
+[study@master redis-5.0.3]$ redis-sentinel sentinel.conf
+16791:X 19 Mar 2019 21:53:17.160 # oO0OoO0OoO0Oo Redis is starting oO0OoO0OoO0Oo
+16791:X 19 Mar 2019 21:53:17.160 # Redis version=5.0.3, bits=64, commit=00000000, modified=0, pid=16791, just started
+16791:X 19 Mar 2019 21:53:17.160 # Configuration loaded
+[study@master redis-5.0.3]$ ps -ef | grep redis
+study     16778      1  0 21:52 ?        00:00:00 redis-server 0.0.0.0:6379
+study     16792      1  0 21:53 ?        00:00:00 redis-sentinel *:26379 [sentinel]
+study     16797  16562  0 21:53 pts/4    00:00:00 grep --color=auto redis
+```
+
+三台机器全部启动redis的server和哨兵
+
+```bash
+[study@master redis-5.0.3]$ redis-cli -p 6379 info replication
+# Replication
+role:slave
+master_host:192.168.148.130
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:0
+master_sync_in_progress:0
+slave_repl_offset:15735
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_replid:4138e22ab14647360f0ec1f286c6775375e82bc2
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:15735
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:15735
+```
+
+查看哪一台是master, 这里我进行过障碍转移了, 现在是slave2这台机器是master, master这台机器是slave.
+
+> 后面用master-redis, 来区分到底是redis还是机器
+
+```bash
+//在slave2的master-redis进行set操作
+127.0.0.1:6379> set demo hhh
+OK
+127.0.0.1:6379> keys *
+1) "demo"
+//在master的slave-redis查看是否存在, 如果有尝试set
+127.0.0.1:6379> keys *
+1) "demo"
+127.0.0.1:6379> set demo henghengheng
+(error) READONLY You can't write against a read only replica.
+```
+
+redis跟postgresql一样, 在这里直接报错, 而不像某某最流行数据库.
+
+### 障碍转移检验
+
+在salve2上面kill掉我们的master-redis.
+
+```bash
+[study@slave2 redis-5.0.3]$ ps -ef | grep redis
+study     20220      1  0 21:53 ?        00:00:01 redis-server 0.0.0.0:6379
+study     20227      1  0 21:53 ?        00:00:01 redis-sentinel *:26379 [sentinel]
+study     20414  20179  0 22:00 pts/0    00:00:00 grep --color=auto redis
+[study@slave2 redis-5.0.3]$ kill -9 20220
+```
+
+已经杀掉了, 去master查看集群状态
+
+```bash
+[study@master redis-5.0.3]$ redis-cli -p 6379 info replication
+# Replication
+role:slave
+master_host:192.168.148.130
+master_port:6379
+master_link_status:down
+master_last_io_seconds_ago:-1
+master_sync_in_progress:0
+slave_repl_offset:97758
+master_link_down_since_seconds:28
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_replid:4138e22ab14647360f0ec1f286c6775375e82bc2
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:97758
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:97758
+```
+
+发现在这个瞬间, master-redis是down了的, 我们等个10s.
+
+```bash
+[study@master redis-5.0.3]$ redis-cli -p 6379 info replication
+# Replication
+role:slave
+master_host:192.168.148.129
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:0
+master_sync_in_progress:0
+slave_repl_offset:108487
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_replid:9cb87179c96aae91415dc65781344b3a3826db08
+master_replid2:4138e22ab14647360f0ec1f286c6775375e82bc2
+master_repl_offset:108487
+second_repl_offset:97759
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:108487
+```
+
+已经障碍转移了, master-redis转到了slave1机器上, 再启动slave2被kill的redis-server, 大概5s后, master-redis已经能够检测到重启的redis了, 重启的redis成为了slave
+
+```bash
+[study@slave1 redis-5.0.3]$ redis-cli -p 6379 info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=192.168.148.131,port=6379,state=online,offset=141420,lag=1
+slave1:ip=192.168.148.130,port=6379,state=online,offset=141570,lag=0
+master_replid:9cb87179c96aae91415dc65781344b3a3826db08
+master_replid2:4138e22ab14647360f0ec1f286c6775375e82bc2
+master_repl_offset:141570
+second_repl_offset:97759
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:141570
+```
+
+而配置的redis.conf和sentinel.conf是随着集群状况而不断变化的.
+
+### 查看哨兵数目
+
+```bash
+[study@master redis-5.0.3]$ redis-cli -h 192.168.148.129 -p 26379 info sentinel
+# Sentinel
+sentinel_masters:1
+sentinel_tilt:0
+sentinel_running_scripts:0
+sentinel_scripts_queue_length:0
+sentinel_simulate_failure_flags:0
+master0:name=sentinel_one,status=ok,address=192.168.148.129:6379,slaves=2,sentinels=3
+```
+
+可以看到集群的状况, 1个master, 2个slave, 3个sentinel.
+
+> 因为在sentinel.conf中设置了sentinel monitor sentinel_one 192.168.148.129 6379 2
+>
+> 所以必须要2个哨兵发现才可以进行障碍转移.如果只有一个哨兵是不行的.
+
 <span id="环境变量"></span>
 
 ## 我的/etc/profile环境变量添加如下
