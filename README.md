@@ -8,6 +8,8 @@ Hadoop,Zookeeper,Flink等集群配置
 ### [5.ResourceManager的HA配置](#ResourceManager的HA配置)
 ### [6.Flink Standalone](#Flink集群部署)
 
+### [6.1阶段性小结](#阶段性总结)
+
 ### [7.搭建postgresql的hostandby环境](#hotstandby)
 
 ### [8.kafka_2.12-2.1.1集群搭建](#kafka集群)
@@ -347,6 +349,8 @@ zkServer.sh stop
 ```
 
 到这, jps应该查不到运行的相关进程了, 后面想要开启集群的时候, 只要反过来开就行了, 具体遇到问题, 可以具体再分析.
+
+> 将hadoop的启动命令全写到了脚本内, zk和flink的就一个命令就不放了.
 
 <span id="hotstandby"></span>
 
