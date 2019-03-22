@@ -399,8 +399,10 @@ kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
 
 1. 创建Topic, 设定复制因子和分区.
 
+   > 按照物理机隔离来说的话，zk必须是3台以上才能保证高可用，replication也得3，分区的话，既然不是逻辑分区，是物理分区就1就好了。这是只有3台机器并且不计成本的方案。
+
    ```bash
-   [hadoop@master config]$ kafka-topics.sh --create --zookeeper master:2181 --replication-factor 2 --partitions 1 --topic test
+   [hadoop@master config]$ kafka-topics.sh --create --zookeeper master:2181 --replication-factor 3 --partitions 1 --topic test
    ....
    ```
 
@@ -454,6 +456,12 @@ kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
            Topic: test     Partition: 0    Leader: 0       Replicas: 2,0   Isr: 0,2
    ```
 
+7. 删除topic
+
+   ```bash
+   kafka-topics --delete --zookeeper master:2181 --topic test
+   ```
+
 ### 关闭Kafka集群
 
 和zookeeper一样, 在所有机器上运行stop脚本
@@ -463,6 +471,59 @@ kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
 ```bash
 [hadoop@slave2 config]$ kafka-server-stop.sh
 ```
+
+### Kafka集群遇到的单点问题(配置文件已修改)
+
+使用spring boot继承kafka后, producer还是能够正常producer, 但是consumer无法继续消费.
+
+> __consumer_offsets 这个主题下，存储的是所有消费者组消费情况，如果它不是高可用，那自然就无法消费了。
+
+网上查阅似乎是这个topic的问题, 继续进行研究.
+
+```bash
+[hadoop@master ~]$ kafka-topics.sh --describe --zookeeper master:2181|grep consumer_offsets
+Topic:__consumer_offsets        PartitionCount:50       ReplicationFactor:1     Configs:segment.bytes=104857600,clean                                                 up.policy=compact,compression.type=producer
+...
+```
+
+发现其ReplicationFactor数量是1, 需要增加副本数量, 不然就会存在单点问题
+
+参考地址: https://www.cnblogs.com/jun1019/p/6634545.html
+
+删除zookeeper上的znode,  具体要删两个地方.
+
+```bash
+[hadoop@master ~]$ zkCli.sh
+Connecting to localhost:2181
+...
+[zk: localhost:2181(CONNECTED) 2] rmr /brokers/topics/__consumer_offsets
+[zk: localhost:2181(CONNECTED) 4] rmr /config/topics/__consumer_offsets
+[zk: localhost:2181(CONNECTED) 5] quit
+Quitting...
+2019-03-22 14:11:46,987 [myid:] - INFO  [main:ZooKeeper@693] - Session: 0x100021a32890017 closed
+2019-03-22 14:11:46,988 [myid:] - INFO  [main-EventThread:ClientCnxn$EventThread@522] - EventThread shut down for session: 0x100021a32890017
+[hadoop@master ~]$kafka-topics.sh --describe --topic __consumer_offsets --zookeeper localhost:2181
+[hadoop@master ~]$
+```
+
+修改配置文件server.properties, 因为版本不一样了, 我修改的部分为下面四项, 三台机器都改一下:
+
+```properties
+num.partitions=3
+offsets.topic.replication.factor=3
+transaction.state.log.replication.factor=3
+transaction.state.log.min.isr=3
+```
+
+重新启动后, 再创建test的topic, 进行消息生产消费后, 查看__consumer_offsets的情况.
+
+```bash
+[hadoop@master logs]$ kafka-topics.sh --describe --topic __consumer_offsets --zookeeper localhost:2181
+Topic:__consumer_offsets        PartitionCount:50       ReplicationFactor:3     Configs:segment.bytes=104857600,cleanup.policy=compact,compression.type=producer
+...
+```
+
+分区变成3个了, 现在关掉两个kafka后测试可用性, 3个kafka任意关掉两个都不会影响消费了,成功.
 
 <span id="Redis集群"></span>
 
