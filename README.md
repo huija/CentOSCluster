@@ -327,6 +327,64 @@ Starting execution of program
 
 ```
 
+### Flink的StandaloneHA配置
+
+[在前面的基础上对于相关配置项进行配置.](https://github.com/huija/CentOSCluster/tree/master/standalonesession_HA)
+
+HA就算配置好了, 重启集群即可, 基于的是前面的zk集群, 没有用内置的zk.
+
+```bash
+[hadoop@master ~]$ start-cluster.sh
+Starting HA cluster with 2 masters.
+Starting standalonesession daemon on host master.
+Starting standalonesession daemon on host slave1.
+Starting taskexecutor daemon on host slave2.
+[hadoop@master ~]$
+```
+
+启动了两台standalonesession, 也就是JobManager, 一台taskexecutor也就是TaskManager.
+
+>  浏览器访问http://master:8081和http://slave1:8081, 最后都会重定向到master的页面
+
+此时的active机器是master, 而slave1的是standby.
+
+```bash
+[hadoop@master ~]$ jps
+41520 ResourceManager
+48626 Jps
+48515 StandaloneSessionClusterEntrypoint
+40789 Kafka
+40984 NameNode
+41624 JobHistoryServer
+41404 DFSZKFailoverController
+18061 QuorumPeerMain
+41199 JournalNode
+[hadoop@master ~]$ kill -9 48515
+```
+
+kill掉master上的StandaloneSession, 这时候master无法访问, slave1也没法重定向了. 
+
+大概10s后, 访问http://slave1:8081/ 可以访问到Flink的管理界面, 这时候障碍转移已经生效了.
+
+```bash
+[hadoop@master ~]$ jobmanager.sh start
+Starting standalonesession daemon on host master.
+[hadoop@master ~]$ jps
+41520 ResourceManager
+40789 Kafka
+49094 Jps
+40984 NameNode
+41624 JobHistoryServer
+41404 DFSZKFailoverController
+49052 StandaloneSessionClusterEntrypoint
+18061 QuorumPeerMain
+41199 JournalNode
+```
+
+重启master机器上的StandaloneSession, 访问http://master:8081.
+
+大概10s后, 我们可以发现其已经可以自动跳转到http://slave1:8081/ 了 , 说明HA的设置成功了.
+
 ## 阶段性总结
 
 到这里就搭建好了初步的hadoop,zookeeper,flink集群, 进程可以通过jps查看.
