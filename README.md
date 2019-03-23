@@ -245,7 +245,7 @@ yarn-daemon.sh start resourcemanager
 
 ## Flink Standalone
 
-> flink有两种运行模式,分为standalone和on yarn,on yarn我本机资源不够,启动不起来,而且能standalone部署了,那么基本on yarn不存在什么问题.
+> flink集群有两种运行模式,分为standalone和on yarn
 
 在master上解压flink安装包, [并进行设置](https://github.com/huija/CentOSCluster/tree/master/flink-1.7.1_standalone). 然后将master上的flink拷贝到需要的slave上!
 
@@ -389,8 +389,6 @@ Starting standalonesession daemon on host master.
 
 到这里就搭建好了初步的hadoop,zookeeper,flink集群, 进程可以通过jps查看.
 
-> flink的HA也是通过zookeeper, 我就不试了.
-
 如今集群全开的情况下, 关闭的步骤如下:
 
 ```bash
@@ -408,7 +406,7 @@ zkServer.sh stop
 
 到这, jps应该查不到运行的相关进程了, 后面想要开启集群的时候, 只要反过来开就行了, 具体遇到问题, 可以具体再分析.
 
-> 将hadoop的启动命令全写到了脚本内, zk和flink的就一个命令就不放了.
+> 现在将hadoop的启动命令全写到了脚本内, 也就是start和stop两个脚本.
 
 <span id="hotstandby"></span>
 
@@ -532,7 +530,7 @@ kafka的集群类型跟zookeeper比较像, 每一个节点都需要进行启动.
 
 ### Kafka集群遇到的单点问题(配置文件已修改)
 
-使用spring boot继承kafka后, producer还是能够正常producer, 但是consumer无法继续消费.
+使用spring boot集成kafka后, 关闭掉master机器的kafka应用, producer还是能够正常produce, 但是consumer无法继续消费.
 
 > __consumer_offsets 这个主题下，存储的是所有消费者组消费情况，如果它不是高可用，那自然就无法消费了。
 
