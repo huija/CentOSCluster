@@ -16,7 +16,9 @@ Hadoop,Zookeeper,Flink等集群配置
 
 ### [9.redis-5.0.3集群搭建](#Redis集群)
 
-### [10.我的/etc/profile环境变量添加如下](#环境变量)
+### [10.solr-cloud搭建](#solr-cloud)
+
+### [11.我的/etc/profile环境变量添加如下](#环境变量)
 
 <span id="虚拟机配置!!"></span>
 
@@ -758,6 +760,12 @@ master0:name=sentinel_one,status=ok,address=192.168.148.129:6379,slaves=2,sentin
 > 因为在sentinel.conf中设置了sentinel monitor sentinel_one 192.168.148.129 6379 2
 >
 > 所以必须要2个哨兵发现才可以进行障碍转移.如果只有一个哨兵是不行的.
+
+<span id="solr-cloud"></span>
+
+## solr-cloud搭建
+
+[Solr的概述及Solr-Cloud搭建](https://huija.github.io/2019/04/18/solr/)
 
 <span id="环境变量"></span>
 
